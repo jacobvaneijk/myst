@@ -1,0 +1,17 @@
+---
+BasedOnStyle: Google
+IndentWidth: 4
+---
+Language: Cpp
+AccessModifierOffset: -4
+AlignAfterOpenBracket: AlwaysBreak
+AllowShortFunctionsOnASingleLine: None
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: true
+  AfterNamespace: true
+BinPackParameters: false
+FixNamespaceComments: false
+IncludeBlocks: Preserve
+NamespaceIndentation: All
+...
