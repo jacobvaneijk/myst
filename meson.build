@@ -23,6 +23,7 @@ headers = include_directories(
 
 sources = files([
     'src/main.cpp',
+    'src/GLShader.cpp',
     'vendor/glad/src/glad.c'
 ])
 
