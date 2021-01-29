@@ -33,10 +33,6 @@ namespace Myst
 
         bool Compile(const char* src);
 
-        void SetBool(const std::string& name, bool value) const;
-        void SetFloat(const std::string& name, float value) const;
-        void SetInt(const std::string& name, int value) const;
-
     private:
         GLenum mType;
         GLuint mID;
@@ -53,6 +49,10 @@ namespace Myst
         bool Link();
         void Bind();
         void Unbind();
+
+        void SetBool(const std::string& name, bool value) const;
+        void SetFloat(const std::string& name, float value) const;
+        void SetInt(const std::string& name, int value) const;
 
     private:
         GLuint mID;

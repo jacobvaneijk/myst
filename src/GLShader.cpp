@@ -38,21 +38,6 @@ namespace Myst
         return true;
     }
 
-    void GLShader::SetBool(const std::string& name, bool value) const
-    {
-        glUniform1i(glGetUniformLocation(mID, name.c_str()), (int)value);
-    }
-
-    void GLShader::SetFloat(const std::string& name, float value) const
-    {
-        glUniform1f(glGetUniformLocation(mID, name.c_str()), value);
-    }
-
-    void GLShader::SetInt(const std::string& name, int value) const
-    {
-        glUniform1i(glGetUniformLocation(mID, name.c_str()), value);
-    }
-
     GLShaderProgram::GLShaderProgram()
     {
         mID = glCreateProgram();
@@ -93,5 +78,20 @@ namespace Myst
     void GLShaderProgram::Unbind()
     {
         glUseProgram(0);
+    }
+
+    void GLShaderProgram::SetBool(const std::string& name, bool value) const
+    {
+        glUniform1i(glGetUniformLocation(mID, name.c_str()), (int)value);
+    }
+
+    void GLShaderProgram::SetFloat(const std::string& name, float value) const
+    {
+        glUniform1f(glGetUniformLocation(mID, name.c_str()), value);
+    }
+
+    void GLShaderProgram::SetInt(const std::string& name, int value) const
+    {
+        glUniform1i(glGetUniformLocation(mID, name.c_str()), value);
     }
 }
