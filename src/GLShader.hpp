@@ -16,7 +16,8 @@
 
 namespace Myst
 {
-    class GLShader {
+    class GLShader
+    {
     public:
         GLShader(GLenum type);
         ~GLShader();
@@ -40,7 +41,8 @@ namespace Myst
         std::string mSource;
     };
 
-    class GLShaderProgram {
+    class GLShaderProgram
+    {
     public:
         GLShaderProgram();
         ~GLShaderProgram();

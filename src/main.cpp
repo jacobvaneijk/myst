@@ -14,6 +14,7 @@
 #include <glad/glad.h>
 
 #include "GLShader.hpp"
+#include "GLTexture.hpp"
 
 static GLFWwindow* window = nullptr;
 static GLuint VAO, VBO;
@@ -22,20 +23,30 @@ static const char* vShaderSource =
     "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "layout (location = 1) in vec3 aColor;\n"
+    "layout (location = 2) in vec2 aTexCoord;\n"
+    "\n"
     "out vec4 vertexColor;\n"
+    "out vec2 vertexTexCoord;\n"
+    "\n"
     "void main()\n"
     "{\n"
     "   gl_Position = vec4(aPos.xyz, 1.0);\n"
     "   vertexColor = vec4(aColor.xyz, 1.0);\n"
+    "   vertexTexCoord = vec2(aTexCoord.x, aTexCoord.y);\n"
     "}\0";
 
 static const char* fShaderSource =
     "#version 460 core\n"
-    "in vec4 vertexColor;\n"
     "out vec4 FragColor;\n"
+    "\n"
+    "in vec4 vertexColor;\n"
+    "in vec2 vertexTexCoord;\n"
+    "\n"
+    "uniform sampler2D myTexture;\n"
+    "\n"
     "void main()\n"
     "{\n"
-    "   FragColor = vertexColor;\n"
+    "   FragColor = texture(myTexture, vertexTexCoord);\n"
     "}\0";
 
 static void glfwErrorCallback(int error, const char* description)
@@ -43,13 +54,14 @@ static void glfwErrorCallback(int error, const char* description)
     std::cerr << "glfw: " << description << std::endl;
 }
 
-static void GLAPIENTRY glMessageCallback(GLenum source,
-                                         GLenum type,
-                                         GLuint id,
-                                         GLenum severity,
-                                         GLsizei length,
-                                         const GLchar* message,
-                                         const void* userParam)
+static void GLAPIENTRY glMessageCallback(
+    GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar* message,
+    const void* userParam)
 {
     std::cerr << "gl: type=0x" << type << ", severity=0x" << severity
               << ", message=" << message << std::endl;
@@ -117,6 +129,7 @@ static bool initShaders()
     }
 
     program->Bind();
+    program->SetInt("myTexture", 0);
 
     return true;
 }
@@ -125,10 +138,10 @@ static void initBuffers()
 {
     // clang-format off
     float vertices[] = {
-        // positions        // colors
-        0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,
-       -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,
-        0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f,
+        // positions        // colors          // texture coordinates
+        0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  1.0f, 0.0f,
+       -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
+        0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.5f, 1.0f,
     };
 
     // Create the vertex array object and the vertex buffer object.
@@ -144,13 +157,32 @@ static void initBuffers()
 
     // Setup `position` attribute.
     glVertexAttribPointer(
-        0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+        0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     // Setup `color` attribute.
     glVertexAttribPointer(
-        1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+        1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    // Setup `texture coordinate` attribute.
+    glVertexAttribPointer(
+        2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+}
+
+static bool initTexture()
+{
+    auto texture = std::make_unique<Myst::GLTexture>("assets/uv_grid.png", GL_TEXTURE_2D);
+
+    if (!texture->Generate()) {
+        std::cerr << "gl: failed to load texture" << std::endl;
+        return false;
+    }
+
+    texture->Bind();
+
+    return true;
 }
 
 static void update()
@@ -187,6 +219,7 @@ int main(int argc, char* argv[])
     }
 
     initBuffers();
+    initTexture();
 
     while (!glfwWindowShouldClose(window)) {
         update();

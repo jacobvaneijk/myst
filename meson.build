@@ -18,12 +18,14 @@ add_project_arguments(
 
 headers = include_directories(
     'src',
-    'vendor/glad/include'
+    'vendor/glad/include',
+    'vendor/stb'
 )
 
 sources = files([
     'src/main.cpp',
     'src/GLShader.cpp',
+    'src/GLTexture.cpp',
     'vendor/glad/src/glad.c'
 ])
 

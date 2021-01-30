@@ -5,11 +5,14 @@ IndentWidth: 4
 Language: Cpp
 AccessModifierOffset: -4
 AlignAfterOpenBracket: AlwaysBreak
+AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: None
 BreakBeforeBraces: Custom
 BraceWrapping:
+  AfterClass: true
   AfterFunction: true
   AfterNamespace: true
+  AfterStruct: true
 BinPackParameters: false
 FixNamespaceComments: false
 IncludeBlocks: Preserve
