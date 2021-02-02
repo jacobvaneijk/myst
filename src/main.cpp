@@ -13,40 +13,48 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "GLShader.hpp"
 #include "GLTexture.hpp"
+
+#define WIDTH (640)
+#define HEIGHT (480)
 
 static GLFWwindow* window = nullptr;
 static GLuint VAO, VBO;
 
+static std::unique_ptr<Myst::GLShaderProgram> program;
+
 static const char* vShaderSource =
     "#version 460 core\n"
     "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec3 aColor;\n"
-    "layout (location = 2) in vec2 aTexCoord;\n"
+    "layout (location = 1) in vec2 aTexCoord;\n"
     "\n"
-    "out vec4 vertexColor;\n"
-    "out vec2 vertexTexCoord;\n"
+    "out vec2 TexCoord;\n"
+    "\n"
+    "uniform mat4 model;\n"
+    "uniform mat4 view;\n"
+    "uniform mat4 projection;\n"
     "\n"
     "void main()\n"
     "{\n"
-    "   gl_Position = vec4(aPos.xyz, 1.0);\n"
-    "   vertexColor = vec4(aColor.xyz, 1.0);\n"
-    "   vertexTexCoord = vec2(aTexCoord.x, aTexCoord.y);\n"
+    "   gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
+    "   TexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);\n"
     "}\0";
 
 static const char* fShaderSource =
     "#version 460 core\n"
     "out vec4 FragColor;\n"
     "\n"
-    "in vec4 vertexColor;\n"
-    "in vec2 vertexTexCoord;\n"
+    "in vec2 TexCoord;\n"
     "\n"
     "uniform sampler2D myTexture;\n"
     "\n"
     "void main()\n"
     "{\n"
-    "   FragColor = texture(myTexture, vertexTexCoord);\n"
+    "   FragColor = texture(myTexture, TexCoord);\n"
     "}\0";
 
 static void glfwErrorCallback(int error, const char* description)
@@ -81,7 +89,7 @@ static bool initGLFW()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    window = glfwCreateWindow(640, 480, "Myst", nullptr, nullptr);
+    window = glfwCreateWindow(WIDTH, HEIGHT, "Myst", nullptr, nullptr);
 
     if (window == nullptr) {
         std::cerr << "glfw: window creation failed" << std::endl;
@@ -118,7 +126,7 @@ static bool initShaders()
         return false;
     }
 
-    auto program = std::make_unique<Myst::GLShaderProgram>();
+    program = std::make_unique<Myst::GLShaderProgram>();
 
     program->AttachShader(*vShader);
     program->AttachShader(*fShader);
@@ -138,10 +146,48 @@ static void initBuffers()
 {
     // clang-format off
     float vertices[] = {
-        // positions        // colors          // texture coordinates
-        0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  1.0f, 0.0f,
-       -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
-        0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.5f, 1.0f,
+        // positions          // texture coordinates
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
     };
 
     // Create the vertex array object and the vertex buffer object.
@@ -157,18 +203,13 @@ static void initBuffers()
 
     // Setup `position` attribute.
     glVertexAttribPointer(
-        0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+        0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-
-    // Setup `color` attribute.
-    glVertexAttribPointer(
-        1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
 
     // Setup `texture coordinate` attribute.
     glVertexAttribPointer(
-        2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
+        1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 }
 
 static bool initTexture()
@@ -192,10 +233,22 @@ static void update()
     }
 
     glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 projection = glm::mat4(1.0f);
+
+    model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f), glm::vec3(1.0f));
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
+
+    program->SetMat4("model", model);
+    program->SetMat4("view", view);
+    program->SetMat4("projection", projection);
 
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -212,6 +265,7 @@ int main(int argc, char* argv[])
     }
 
     glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEPTH_TEST);
     glDebugMessageCallback(glMessageCallback, 0);
 
     if (!initShaders()) {

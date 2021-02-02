@@ -19,6 +19,7 @@ add_project_arguments(
 headers = include_directories(
     'src',
     'vendor/glad/include',
+    'vendor/glm',
     'vendor/stb'
 )
 
