@@ -29,42 +29,12 @@ static GLuint VAO, VBO;
 static std::unique_ptr<Myst::GLShaderProgram> program;
 static std::unique_ptr<Myst::Camera> camera;
 
-static bool firstMouseMovement {true};
-static float mouseLastX {0};
-static float mouseLastY {0};
+static bool firstMouseMovement{true};
+static float mouseLastX{0};
+static float mouseLastY{0};
 
-static float deltaTime {0};
-static float lastTime {0};
-
-static const char* vShaderSource =
-    "#version 460 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec2 aTexCoord;\n"
-    "\n"
-    "out vec2 TexCoord;\n"
-    "\n"
-    "uniform mat4 model;\n"
-    "uniform mat4 view;\n"
-    "uniform mat4 projection;\n"
-    "\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
-    "   TexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);\n"
-    "}\0";
-
-static const char* fShaderSource =
-    "#version 460 core\n"
-    "out vec4 FragColor;\n"
-    "\n"
-    "in vec2 TexCoord;\n"
-    "\n"
-    "uniform sampler2D myTexture;\n"
-    "\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = texture(myTexture, TexCoord);\n"
-    "}\0";
+static float deltaTime{0};
+static float lastTime{0};
 
 static void glfwErrorCallback(int error, const char* description)
 {
@@ -88,7 +58,8 @@ static void glfwCursorPosCallback(GLFWwindow* window, double xPos, double yPos)
     camera->OnMouseMove((float)xDelta, (float)yDelta);
 }
 
-static void glfwScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
+static void glfwScrollCallback(
+    GLFWwindow* window, double xOffset, double yOffset)
 {
     camera->OnMouseScroll((float)yOffset);
 }
@@ -148,15 +119,17 @@ static bool initGLAD()
 
 static bool initShaders()
 {
-    auto vShader = std::make_unique<Myst::GLShader>(GL_VERTEX_SHADER);
-    auto fShader = std::make_unique<Myst::GLShader>(GL_FRAGMENT_SHADER);
+    auto vShader = std::make_unique<Myst::GLShader>(
+        "assets/shaders/vertex.glsl", GL_VERTEX_SHADER);
+    auto fShader = std::make_unique<Myst::GLShader>(
+        "assets/shaders/fragment.glsl", GL_FRAGMENT_SHADER);
 
-    if (!vShader->Compile(vShaderSource)) {
+    if (!vShader->Compile()) {
         std::cerr << "gl: failed to compile vShader" << std::endl;
         return false;
     }
 
-    if (!fShader->Compile(fShaderSource)) {
+    if (!fShader->Compile()) {
         std::cerr << "gl: failed to compile fShader" << std::endl;
         return false;
     }
@@ -249,7 +222,7 @@ static void initBuffers()
 
 static bool initTexture()
 {
-    auto texture = std::make_unique<Myst::GLTexture>("assets/uv_grid.png", GL_TEXTURE_2D);
+    auto texture = std::make_unique<Myst::GLTexture>("assets/textures/uv_grid.png", GL_TEXTURE_2D);
 
     if (!texture->Generate()) {
         std::cerr << "gl: failed to load texture" << std::endl;

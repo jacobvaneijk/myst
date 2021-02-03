@@ -7,8 +7,10 @@
 
 #pragma once
 
+#include <fstream>
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <utility>
 
@@ -20,7 +22,7 @@ namespace Myst
     class GLShader
     {
     public:
-        GLShader(GLenum type);
+        GLShader(const std::string& filepath, GLenum type);
         ~GLShader();
 
         GLenum GetType() const
@@ -33,12 +35,16 @@ namespace Myst
             return mID;
         }
 
-        bool Compile(const char* src);
+        bool Compile();
+
+    private:
+        bool ReadFile();
 
     private:
         GLenum mType;
         GLuint mID;
 
+        std::string mFilepath;
         std::string mSource;
     };
 

@@ -9,7 +9,9 @@
 
 namespace Myst
 {
-    GLShader::GLShader(GLenum type) : mType(type)
+    GLShader::GLShader(const std::string& filepath, GLenum type)
+        : mType(type)
+        , mFilepath(filepath)
     {
         mID = glCreateShader(type);
     }
@@ -19,9 +21,16 @@ namespace Myst
         glDeleteShader(mID);
     }
 
-    bool GLShader::Compile(const char* src)
+    bool GLShader::Compile()
     {
         GLint success{0};
+
+        if (!ReadFile()) {
+            std::cerr << "myst: could not read file \"" << mFilepath << "\"" << std::endl;
+            return false;
+        }
+
+        const char* src = mSource.c_str();
 
         glShaderSource(mID, 1, &src, NULL);
         glCompileShader(mID);
@@ -34,6 +43,21 @@ namespace Myst
             std::cerr << "gl: shader compilation failed: " << info << std::endl;
             return false;
         }
+
+        return true;
+    }
+
+    bool GLShader::ReadFile()
+    {
+        std::ifstream ifs(mFilepath);
+        std::stringstream buffer;
+
+        if (!ifs.is_open()) {
+            return false;
+        }
+
+        buffer << ifs.rdbuf();
+        mSource = buffer.str();
 
         return true;
     }
