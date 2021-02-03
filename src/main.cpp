@@ -16,6 +16,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "Camera.hpp"
 #include "GLShader.hpp"
 #include "GLTexture.hpp"
 
@@ -26,6 +27,14 @@ static GLFWwindow* window = nullptr;
 static GLuint VAO, VBO;
 
 static std::unique_ptr<Myst::GLShaderProgram> program;
+static std::unique_ptr<Myst::Camera> camera;
+
+static bool firstMouseMovement {true};
+static float mouseLastX {0};
+static float mouseLastY {0};
+
+static float deltaTime {0};
+static float lastTime {0};
 
 static const char* vShaderSource =
     "#version 460 core\n"
@@ -62,6 +71,28 @@ static void glfwErrorCallback(int error, const char* description)
     std::cerr << "glfw: " << description << std::endl;
 }
 
+static void glfwCursorPosCallback(GLFWwindow* window, double xPos, double yPos)
+{
+    if (firstMouseMovement) {
+        firstMouseMovement = false;
+        mouseLastX = xPos;
+        mouseLastY = yPos;
+    }
+
+    double xDelta = xPos - mouseLastX;
+    double yDelta = mouseLastY - yPos;
+
+    mouseLastX = xPos;
+    mouseLastY = yPos;
+
+    camera->OnMouseMove((float)xDelta, (float)yDelta);
+}
+
+static void glfwScrollCallback(GLFWwindow* window, double xOffset, double yOffset)
+{
+    camera->OnMouseScroll((float)yOffset);
+}
+
 static void GLAPIENTRY glMessageCallback(
     GLenum source,
     GLenum type,
@@ -95,6 +126,10 @@ static bool initGLFW()
         std::cerr << "glfw: window creation failed" << std::endl;
         return false;
     }
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, glfwCursorPosCallback);
+    glfwSetScrollCallback(window, glfwScrollCallback);
 
     glfwMakeContextCurrent(window);
 
@@ -226,32 +261,71 @@ static bool initTexture()
     return true;
 }
 
-static void update()
+static void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
 
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        camera->OnKeyPress(GLFW_KEY_W, deltaTime);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        camera->OnKeyPress(GLFW_KEY_A, deltaTime);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        camera->OnKeyPress(GLFW_KEY_S, deltaTime);
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        camera->OnKeyPress(GLFW_KEY_D, deltaTime);
+    }
+}
+
+static void render(GLFWwindow* window)
+{
     glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 view = glm::mat4(1.0f);
-    glm::mat4 projection = glm::mat4(1.0f);
-
-    model = glm::rotate(model, (float)glfwGetTime() * glm::radians(20.0f), glm::vec3(1.0f));
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-    projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
-
-    program->SetMat4("model", model);
-    program->SetMat4("view", view);
+    glm::mat4 projection = glm::perspective(glm::radians(camera->GetZoom()), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
     program->SetMat4("projection", projection);
 
+    glm::mat4 view = camera->GetViewMatrix();
+    program->SetMat4("view", view);
+
     glBindVertexArray(VAO);
+
+    glm::mat4 model = glm::mat4(1.0f);
+
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(20.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    program->SetMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(-30.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    program->SetMat4("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    model = glm::translate(model, glm::vec3(-2.0f, 0.0f, 2.0f));
+    model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    program->SetMat4("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
+}
+
+static void update()
+{
+    float currentTime = glfwGetTime();
+    deltaTime = currentTime - lastTime;
+    lastTime = currentTime;
+
+    processInput(window);
+    render(window);
 }
 
 int main(int argc, char* argv[])
@@ -274,6 +348,8 @@ int main(int argc, char* argv[])
 
     initBuffers();
     initTexture();
+
+    camera = std::make_unique<Myst::Camera>(glm::vec3(0.0f, 0.0f, 3.0f));
 
     while (!glfwWindowShouldClose(window)) {
         update();
