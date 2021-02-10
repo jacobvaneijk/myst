@@ -348,11 +348,15 @@ int main(int argc, char* argv[])
         cubeProgram->SetVec3("light.ambient", glm::vec3(0.2f));
         cubeProgram->SetVec3("light.diffuse", glm::vec3(0.5f));
         cubeProgram->SetVec3("light.specular", glm::vec3(1.0f));
+        cubeProgram->SetFloat("light.constant", 1.0f);
+        cubeProgram->SetFloat("light.linear", 0.09f);
+        cubeProgram->SetFloat("light.quadratic", 0.032f);
 
         cubeProgram->SetMat4("projection", projection);
         cubeProgram->SetMat4("view", view);
         cubeProgram->SetMat4("model", model);
         cubeProgram->SetMat3("normal", normal);
+
         glBindVertexArray(cubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
