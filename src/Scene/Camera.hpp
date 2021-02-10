@@ -20,6 +20,7 @@ namespace Myst
         ~Camera();
 
         float GetZoom() const;
+        glm::vec3 GetPosition() const;
         glm::mat4 GetViewMatrix() const;
 
         void OnKeyPress(int key, float deltaTime);

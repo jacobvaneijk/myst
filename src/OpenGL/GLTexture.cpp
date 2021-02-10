@@ -5,7 +5,7 @@
  * that was distributed with this source code.
  */
 
-#include "GLTexture.hpp"
+#include "OpenGL/GLTexture.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>

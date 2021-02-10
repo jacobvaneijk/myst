@@ -25,9 +25,9 @@ headers = include_directories(
 
 sources = files([
     'src/main.cpp',
-    'src/Camera.cpp',
-    'src/GLShader.cpp',
-    'src/GLTexture.cpp',
+    'src/Scene/Camera.cpp',
+    'src/OpenGL/GLShader.cpp',
+    'src/OpenGL/GLTexture.cpp',
     'vendor/glad/src/glad.c'
 ])
 

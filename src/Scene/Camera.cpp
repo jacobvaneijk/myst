@@ -5,7 +5,7 @@
  * that was distributed with this source code.
  */
 
-#include "Camera.hpp"
+#include "Scene/Camera.hpp"
 
 namespace Myst
 {
@@ -32,6 +32,11 @@ namespace Myst
     float Camera::GetZoom() const
     {
         return mZoom;
+    }
+
+    glm::vec3 Camera::GetPosition() const
+    {
+        return mPosition;
     }
 
     glm::mat4 Camera::GetViewMatrix() const
